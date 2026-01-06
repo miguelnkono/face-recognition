@@ -753,13 +753,28 @@ def main():
     # Initialize system
     face_system = FaceRecognitionSystem(tolerance=args.tolerance)
 
+    # Determine actual mode based on arguments
+    actual_mode = args.mode
+
+    # Auto-detect mode if not specified but have required args
+    if args.mode == "compare" and args.load and args.test:
+        actual_mode = "compare"
+    elif args.known and os.path.isdir(args.known):
+        actual_mode = "train"
+    elif args.test and (args.known or args.load):
+        actual_mode = "compare"
+
+    print(f"🚀 Mode: {actual_mode.upper()}")
+
     # Handle load/save options
     if args.load:
-        face_system.load_encodings(args.load)
+        if not face_system.load_encodings(args.load):
+            print("❌ Failed to load encodings")
+            return
 
     # Execute based on mode
-    if args.mode == "train" and args.known:
-        print("🚀 Training mode - Building face database...")
+    if actual_mode == "train" and args.known:
+        print("📚 Building face database...")
         if os.path.isdir(args.known):
             face_system.load_known_faces_from_directory(args.known)
         else:
@@ -769,41 +784,67 @@ def main():
         if args.save:
             face_system.save_encodings(args.save)
 
-    elif args.mode == "compare" and args.known and args.test:
-        print("🔍 Comparison mode...")
+        face_system.print_database_info()
 
-        if os.path.isdir(args.known):
-            # Multiple known faces
-            face_system.load_known_faces_from_directory(args.known)
-            results = face_system.compare_faces(args.test)
-        else:
-            # Single comparison
-            results = face_system.test_single_comparison(args.known, args.test)
+    elif actual_mode == "compare" and args.test:
+        print("🔍 Comparing faces...")
+
+        # Check if we have known faces loaded
+        if not face_system.known_face_encodings:
+            if args.known:
+                if os.path.isdir(args.known):
+                    face_system.load_known_faces_from_directory(args.known)
+                else:
+                    name = Path(args.known).stem
+                    face_system.add_known_face(args.known, name)
+            else:
+                print("❌ Error: No known faces loaded. Use --load or --known")
+                return
+
+        results = face_system.compare_faces(args.test)
+
+        if results:
+            print("\n📊 SUMMARY:")
+            print("=" * 40)
+            for result in results:
+                status = "✅ MATCH" if result['is_match'] else "❌ NO MATCH"
+                print(f"Face {result['face_index'] + 1}: {status}")
+                print(f"  Identity: {result['best_match_name']}")
+                print(f"  Confidence: {result['confidence']:.1f}%")
+                print(f"  Distance: {result['best_match_distance']:.4f}")
+                print()
 
         face_system.print_database_info()
 
-    elif args.mode == "realtime":
+    elif actual_mode == "realtime":
         print("📹 Starting real-time recognition...")
-        if args.known:
+        if not face_system.known_face_encodings and args.known:
             face_system.load_known_faces_from_directory(args.known)
+
+        if not face_system.known_face_encodings:
+            print("❌ No known faces loaded for real-time recognition")
+            return
+
         face_system.real_time_recognition()
 
-    elif args.mode == "test":
-        print("🧪 Test mode - Running demo...")
-        # Run a simple demo
+    elif actual_mode == "test":
+        print("🧪 Running test mode...")
         demo_simple_comparison()
 
     else:
-        print("ℹ️  Usage examples:")
-        print("  1. Train with directory: python script.py --mode train --known ./known_faces/")
-        print("  2. Compare single image: python script.py --known person1.jpg --test test.jpg")
-        print("  3. Real-time recognition: python script.py --mode realtime --known ./known_faces/")
-        print("  4. Load saved encodings: python script.py --load encodings.pkl --test test.jpg")
+        print("❌ Invalid arguments or missing required parameters")
+        print("\nℹ️  Usage examples:")
+        print("  1. Compare with loaded encodings:")
+        print("     python final.py --load face_recognition.pkl --test test.jpg")
+        print("  2. Train and save:")
+        print("     python final.py --mode train --known ./known_faces/ --save encodings.pkl")
+        print("  3. Real-time recognition:")
+        print("     python final.py --mode realtime --load encodings.pkl")
+        print("  4. One-to-one comparison:")
+        print("     python final.py --known person1.jpg --test test.jpg")
         print("\n🔧 Options:")
-        print("  --tolerance 0.5    # Stricter matching")
-        print("  --save encodings.pkl # Save database")
-        print("  --load encodings.pkl # Load database")
-
+        print("  --tolerance 0.5    # Stricter matching (default: 0.6)")
+        print("  --mode compare/train/realtime/test")
 
 def demo_simple_comparison():
     """Simple demonstration without command line arguments"""
