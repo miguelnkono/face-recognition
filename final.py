@@ -1,6 +1,3 @@
-# ============================================================================
-# COMPREHENSIVE FACE RECOGNITION SYSTEM
-# ============================================================================
 import cv2
 import numpy as np
 import face_recognition
@@ -24,10 +21,6 @@ class FaceRecognitionSystem:
         self.known_face_encodings = []
         self.known_face_names = []
         self.known_face_images = {}
-
-    # ============================================================================
-    # IMAGE UTILITIES
-    # ============================================================================
 
     def resize_image(self, image: np.ndarray, max_dimension: int = 800) -> np.ndarray:
         """
@@ -79,10 +72,6 @@ class FaceRecognitionSystem:
             print(f"❌ Error loading image {image_path}: {e}")
             return None
 
-    # ============================================================================
-    # FACE DETECTION & ENCODING
-    # ============================================================================
-
     def detect_and_encode_faces(self, image: np.ndarray,
                                num_jitters: int = 1) -> Tuple[List, List]:
         """
@@ -109,10 +98,6 @@ class FaceRecognitionSystem:
 
         print(f"✅ Detected {len(face_locations)} face(s)")
         return face_locations, face_encodings
-
-    # ============================================================================
-    # DATABASE MANAGEMENT
-    # ============================================================================
 
     def load_known_faces_from_directory(self, directory_path: str) -> bool:
         """
@@ -201,10 +186,6 @@ class FaceRecognitionSystem:
         print(f"✅ Added '{name}' to known faces database")
         return True
 
-    # ============================================================================
-    # ENCODINGS SAVE/LOAD
-    # ============================================================================
-
     def save_encodings(self, filename: str = "face_encodings.pkl") -> bool:
         """
         Save face encodings to file
@@ -262,10 +243,6 @@ class FaceRecognitionSystem:
         except Exception as e:
             print(f"❌ Error loading encodings: {e}")
             return False
-
-    # ============================================================================
-    # FACE COMPARISON
-    # ============================================================================
 
     def compare_faces(self, test_image_path: str,
                      display_results: bool = True) -> List[Dict[str, Any]]:
@@ -332,10 +309,6 @@ class FaceRecognitionSystem:
                 self.display_face_comparison(test_image, face_location, result)
 
         return results
-
-    # ============================================================================
-    # VISUALIZATION
-    # ============================================================================
 
     def draw_face_rectangle(self, image: np.ndarray,
                            face_location: Tuple[int, int, int, int],
@@ -556,10 +529,6 @@ class FaceRecognitionSystem:
         cv2.waitKey(0)
         cv2.destroyAllWindows()
 
-    # ============================================================================
-    # REAL-TIME RECOGNITION
-    # ============================================================================
-
     def real_time_recognition(self, camera_index: int = 0,
                              display_scale: float = 0.25) -> None:
         """
@@ -671,10 +640,6 @@ class FaceRecognitionSystem:
         cv2.destroyAllWindows()
         print("\n✅ Real-time recognition stopped")
 
-    # ============================================================================
-    # UTILITIES
-    # ============================================================================
-
     def print_database_info(self) -> None:
         """Print information about loaded face database"""
         print("\n📊 FACE DATABASE INFO")
@@ -734,9 +699,6 @@ class FaceRecognitionSystem:
         }
 
 
-# ============================================================================
-# MAIN FUNCTION WITH COMMAND LINE INTERFACE
-# ============================================================================
 def main():
     parser = argparse.ArgumentParser(description="Face Recognition System")
     parser.add_argument("--mode", choices=["compare", "realtime", "train", "test"],
@@ -853,11 +815,10 @@ def demo_simple_comparison():
     print("🧪 Running face recognition demo...")
     print("=" * 50)
 
-    # Example 1: One-to-one comparison (modify paths as needed)
     print("\n1️⃣ One-to-One Comparison:")
     result = system.test_single_comparison(
-        "data/stilefile.jpg",
-        "data/djoms.jpeg"
+        "data/miguel_061.jpeg",
+        "data/miguel_077.jpeg"
     )
 
     print(f"\n📊 Result:")
@@ -882,7 +843,6 @@ def demo_simple_comparison():
 
 
 if __name__ == "__main__":
-    # If no command line arguments, run demo
     import sys
     if len(sys.argv) == 1:
         demo_simple_comparison()
